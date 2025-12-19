@@ -144,11 +144,9 @@ export async function testConnection(
 ): Promise<{ success: boolean; error?: string }> {
 	return new Promise((resolve) => {
 		let resolved = false;
-		let testProvider: WsProvider | null = null;
 		let websocket: WebSocket | null = null;
 
-		const cleanup = async () => {
-			// Close the raw websocket first to prevent any more events
+		const cleanup = () => {
 			if (websocket) {
 				try {
 					websocket.close();
@@ -156,14 +154,6 @@ export async function testConnection(
 					// Ignore errors
 				}
 				websocket = null;
-			}
-			if (testProvider) {
-				try {
-					await testProvider.disconnect();
-				} catch {
-					// Ignore errors
-				}
-				testProvider = null;
 			}
 		};
 
