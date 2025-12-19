@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { page } from '$app/stores';
 	import { subscribeToConnectionState, getApiOrNull, type ConnectionState } from '$lib/substrate';
 	import { TOKEN_CONFIG, formatBalance } from '$lib/substrate/types';
 	import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
@@ -14,6 +15,9 @@
 	let error = $state<string | null>(null);
 	let copied = $state(false);
 
+	// Track if we've processed the URL parameter
+	let urlParamProcessed = $state(false);
+
 	// Result state
 	let result = $state<{
 		address: string;
@@ -26,7 +30,27 @@
 	onMount(() => {
 		unsubscribeState = subscribeToConnectionState((state) => {
 			connectionState = state;
+
+			// When connected, check if we have an address in the URL to auto-lookup
+			if (state === 'connected' && !urlParamProcessed) {
+				const addressParam = $page.url.searchParams.get('address');
+				if (addressParam) {
+					addressInput = addressParam;
+					urlParamProcessed = true;
+					lookupBalance();
+				}
+			}
 		});
+
+		// Also check immediately if already connected
+		const addressParam = $page.url.searchParams.get('address');
+		if (addressParam) {
+			addressInput = addressParam;
+			if (connectionState === 'connected') {
+				urlParamProcessed = true;
+				lookupBalance();
+			}
+		}
 	});
 
 	onDestroy(() => {

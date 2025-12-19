@@ -62,6 +62,7 @@ export type CladTokenEventType =
  * A token event from the chain
  */
 export interface TokenEvent {
+	id: string;
 	type: CladTokenEventType;
 	blockNumber: number;
 	blockHash: string;
