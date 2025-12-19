@@ -132,3 +132,74 @@ export function getApi(): ApiPromise {
 export function getApiOrNull(): ApiPromise | null {
 	return connectionState === 'connected' ? apiInstance : null;
 }
+
+/**
+ * Test connection to an endpoint without affecting the main connection.
+ * Returns true if connection succeeds within the timeout, false otherwise.
+ * This is useful for validating an endpoint before saving it.
+ */
+export async function testConnection(
+	endpoint: string,
+	timeoutMs: number = 10000
+): Promise<{ success: boolean; error?: string }> {
+	return new Promise((resolve) => {
+		let resolved = false;
+		let websocket: WebSocket | null = null;
+
+		const cleanup = () => {
+			if (websocket) {
+				try {
+					websocket.close();
+				} catch {
+					// Ignore errors
+				}
+				websocket = null;
+			}
+		};
+
+		const finalize = (result: { success: boolean; error?: string }) => {
+			if (!resolved) {
+				resolved = true;
+				cleanup();
+				resolve(result);
+			}
+		};
+
+		const timeoutId = setTimeout(() => {
+			finalize({ success: false, error: 'Connection timed out' });
+		}, timeoutMs);
+
+		try {
+			// Use raw WebSocket for testing - much cleaner than WsProvider
+			// WsProvider has complex retry logic that's hard to cancel
+			websocket = new WebSocket(endpoint);
+
+			websocket.onopen = () => {
+				clearTimeout(timeoutId);
+				finalize({ success: true });
+			};
+
+			websocket.onerror = () => {
+				clearTimeout(timeoutId);
+				finalize({ success: false, error: 'Connection failed' });
+			};
+
+			websocket.onclose = (event) => {
+				// Only treat as error if we haven't resolved yet
+				if (!resolved) {
+					clearTimeout(timeoutId);
+					finalize({
+						success: false,
+						error: event.wasClean ? 'Connection closed' : 'Connection failed'
+					});
+				}
+			};
+		} catch (error) {
+			clearTimeout(timeoutId);
+			finalize({
+				success: false,
+				error: error instanceof Error ? error.message : 'Connection failed'
+			});
+		}
+	});
+}
