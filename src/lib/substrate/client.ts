@@ -7,6 +7,10 @@
 
 import { ApiPromise, WsProvider } from '@polkadot/api';
 
+// Import type augmentations for chain-specific types
+// This provides compile-time type safety for storage queries
+import './interfaces';
+
 // Default endpoint for local development
 const DEFAULT_ENDPOINT = 'ws://127.0.0.1:9944';
 
