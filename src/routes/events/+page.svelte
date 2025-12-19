@@ -154,14 +154,16 @@
 		let result =
 			selectedFilter === 'all' ? events : events.filter((e) => e.type === selectedFilter);
 
-		// Apply date range filter
-		if (dateRangeStart) {
-			const startMs = getStartOfDay(dateRangeStart);
-			result = result.filter((e) => e.timestamp && e.timestamp >= startMs);
-		}
-		if (dateRangeEnd) {
-			const endMs = getEndOfDay(dateRangeEnd);
-			result = result.filter((e) => e.timestamp && e.timestamp <= endMs);
+		// Apply date range filter in a single pass
+		if (dateRangeStart || dateRangeEnd) {
+			const startMs = dateRangeStart ? getStartOfDay(dateRangeStart) : null;
+			const endMs = dateRangeEnd ? getEndOfDay(dateRangeEnd) : null;
+			result = result.filter((e) => {
+				if (!e.timestamp) return false;
+				if (startMs && e.timestamp < startMs) return false;
+				if (endMs && e.timestamp > endMs) return false;
+				return true;
+			});
 		}
 
 		return result;
@@ -483,9 +485,6 @@
 
 		isExporting = true;
 
-		// Small delay to show loading state for better UX
-		await new Promise((resolve) => setTimeout(resolve, 100));
-
 		try {
 			const headers = ['Type', 'Block', 'Block Hash', 'Timestamp', 'Account/From', 'To', 'Amount'];
 			const rows = filteredEvents.map((e) => {
@@ -517,7 +516,7 @@
 			setTimeout(() => {
 				document.body.removeChild(link);
 				URL.revokeObjectURL(url);
-			}, 100);
+			}, 1000);
 
 			// Show success toast
 			showExportSuccess = true;
@@ -654,6 +653,7 @@
 				<input
 					type="date"
 					bind:value={dateRangeStart}
+					max={dateRangeEnd || undefined}
 					class="rounded-md border border-[var(--color-border)] bg-white px-3 py-1.5 text-sm text-[var(--color-navy)] focus:border-[var(--color-teal)] focus:ring-1 focus:ring-[var(--color-teal)] focus:outline-none"
 					onchange={() => (currentPage = 1)}
 				/>
@@ -661,6 +661,7 @@
 				<input
 					type="date"
 					bind:value={dateRangeEnd}
+					min={dateRangeStart || undefined}
 					class="rounded-md border border-[var(--color-border)] bg-white px-3 py-1.5 text-sm text-[var(--color-navy)] focus:border-[var(--color-teal)] focus:ring-1 focus:ring-[var(--color-teal)] focus:outline-none"
 					onchange={() => (currentPage = 1)}
 				/>
@@ -942,6 +943,8 @@
 <!-- Export Success Toast -->
 {#if showExportSuccess}
 	<div
+		role="status"
+		aria-live="polite"
 		class="fixed right-4 bottom-4 z-50 flex items-center gap-3 rounded-lg bg-[var(--color-success)] px-4 py-3 text-white shadow-lg"
 	>
 		<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
