@@ -1,5 +1,7 @@
 # Clad Dashboard
 
+[![CI](https://github.com/clad-sovereign/clad-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/clad-sovereign/clad-dashboard/actions/workflows/ci.yml)
+
 Read-only monitoring dashboard for [Clad](https://clad.so) tokenization infrastructure. Built with SvelteKit and connects to clad-node via Substrate RPC.
 
 ## Overview
@@ -38,7 +40,7 @@ In a separate terminal, start a local clad-node:
 
 ```bash
 # In clad-studio directory
-./target/release/clad-node --dev
+./target/release/clad-node --dev --tmp
 ```
 
 The dashboard will automatically connect to `ws://127.0.0.1:9944`.
@@ -86,11 +88,11 @@ The dashboard connects to `ws://127.0.0.1:9944` by default. This can be changed 
 
 ## Related Projects
 
-| Project | Description |
-|---------|-------------|
-| [clad-studio](https://github.com/clad-sovereign/clad-studio) | Substrate blockchain (pallet-clad-token, runtime, node) |
-| [clad-mobile](https://github.com/clad-sovereign/clad-mobile) | Kotlin Multiplatform mobile signer (iOS/Android) |
-| [clad-website](https://github.com/clad-sovereign/clad-website) | Marketing landing page |
+| Project                                                        | Description                                             |
+| -------------------------------------------------------------- | ------------------------------------------------------- |
+| [clad-studio](https://github.com/clad-sovereign/clad-studio)   | Substrate blockchain (pallet-clad-token, runtime, node) |
+| clad-mobile (private)                                          | Kotlin Multiplatform mobile signer (iOS/Android)        |
+| [clad-website](https://github.com/clad-sovereign/clad-website) | Marketing landing page                                  |
 
 ## License
 

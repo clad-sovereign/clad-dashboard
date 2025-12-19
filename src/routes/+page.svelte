@@ -115,7 +115,11 @@
 				></div>
 			</div>
 			<p class="mt-2 text-2xl font-semibold text-[var(--color-navy)]">
-				{connectionState === 'connected' ? 'Online' : connectionState === 'connecting' ? 'Connecting' : 'Offline'}
+				{connectionState === 'connected'
+					? 'Online'
+					: connectionState === 'connecting'
+						? 'Connecting'
+						: 'Offline'}
 			</p>
 			<p class="mt-1 text-xs text-[var(--color-text-muted)]">
 				{chainInfo.name}
@@ -139,15 +143,13 @@
 			<p class="mt-2 text-2xl font-semibold text-[var(--color-navy)]">
 				{formatSupply(tokenInfo.totalSupply, tokenInfo.decimals)}
 			</p>
-			<p class="mt-1 text-xs text-[var(--color-text-muted)]">
-				Total minted tokens
-			</p>
+			<p class="mt-1 text-xs text-[var(--color-text-muted)]">Total minted tokens</p>
 		</div>
 
 		<!-- Node Version -->
 		<div class="card">
 			<h3 class="text-sm font-medium text-[var(--color-slate-light)]">Node Version</h3>
-			<p class="mt-2 text-lg font-semibold text-[var(--color-navy)] truncate">
+			<p class="mt-2 truncate text-lg font-semibold text-[var(--color-navy)]">
 				{chainInfo.version}
 			</p>
 			<p class="mt-1 font-mono text-xs text-[var(--color-text-muted)]">
@@ -201,7 +203,9 @@
 
 	<!-- Info Banner -->
 	{#if connectionState === 'disconnected' || connectionState === 'error'}
-		<div class="rounded-lg border border-[var(--color-warning)] bg-[var(--color-warning-muted)] p-4">
+		<div
+			class="rounded-lg border border-[var(--color-warning)] bg-[var(--color-warning-muted)] p-4"
+		>
 			<div class="flex items-start gap-3">
 				<svg
 					class="h-5 w-5 text-[var(--color-warning)]"
@@ -222,9 +226,7 @@
 						Unable to connect to the Clad node at ws://127.0.0.1:9944. Make sure your local node is
 						running.
 					</p>
-					<p class="mt-2 font-mono text-xs text-[#92400e]/70">
-						./target/release/clad-node --dev
-					</p>
+					<p class="mt-2 font-mono text-xs text-[#92400e]/70">./target/release/clad-node --dev</p>
 				</div>
 			</div>
 		</div>

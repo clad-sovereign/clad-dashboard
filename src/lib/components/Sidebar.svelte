@@ -26,10 +26,10 @@
 	};
 </script>
 
-<aside class="hidden lg:flex w-64 flex-col border-r border-[var(--color-border)] bg-white">
+<aside class="hidden w-64 flex-col border-r border-[var(--color-border)] bg-white lg:flex">
 	<nav class="flex-1 px-4 py-6">
 		<ul class="space-y-1">
-			{#each navItems as item}
+			{#each navItems as item (item.href)}
 				{@const isActive = $page.url.pathname === item.href}
 				<li>
 					<a
@@ -63,7 +63,7 @@
 					href="https://github.com/clad-sovereign/clad-dashboard"
 					target="_blank"
 					rel="noopener noreferrer"
-					class="hover:text-[var(--color-navy)] transition-colors"
+					class="transition-colors hover:text-[var(--color-navy)]"
 				>
 					GitHub
 				</a>
@@ -72,7 +72,7 @@
 					href="https://clad.so"
 					target="_blank"
 					rel="noopener noreferrer"
-					class="hover:text-[var(--color-navy)] transition-colors"
+					class="transition-colors hover:text-[var(--color-navy)]"
 				>
 					Website
 				</a>
