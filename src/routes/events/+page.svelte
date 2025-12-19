@@ -102,6 +102,14 @@
 	];
 	let selectedFilter = $state<CladTokenEventType | 'all'>('all');
 
+	// Date range filter state
+	let dateRangeStart = $state<string>('');
+	let dateRangeEnd = $state<string>('');
+
+	// Export state
+	let isExporting = $state(false);
+	let showExportSuccess = $state(false);
+
 	// Pagination state
 	const PAGE_SIZE = 20;
 	let currentPage = $state(1);
@@ -128,10 +136,36 @@
 		RemovedFromWhitelist: 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'
 	};
 
-	// Filtered events
-	let filteredEvents = $derived(
-		selectedFilter === 'all' ? events : events.filter((e) => e.type === selectedFilter)
-	);
+	// Date range helpers - parse date string to timestamp without mutation
+	function getStartOfDay(dateStr: string): number {
+		// Parse as YYYY-MM-DD and set to start of day in local timezone
+		const [year, month, day] = dateStr.split('-').map(Number);
+		return new Date(year, month - 1, day, 0, 0, 0, 0).getTime();
+	}
+
+	function getEndOfDay(dateStr: string): number {
+		// Parse as YYYY-MM-DD and set to end of day in local timezone
+		const [year, month, day] = dateStr.split('-').map(Number);
+		return new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
+	}
+
+	// Filtered events (by type and date range)
+	let filteredEvents = $derived.by(() => {
+		let result =
+			selectedFilter === 'all' ? events : events.filter((e) => e.type === selectedFilter);
+
+		// Apply date range filter
+		if (dateRangeStart) {
+			const startMs = getStartOfDay(dateRangeStart);
+			result = result.filter((e) => e.timestamp && e.timestamp >= startMs);
+		}
+		if (dateRangeEnd) {
+			const endMs = getEndOfDay(dateRangeEnd);
+			result = result.filter((e) => e.timestamp && e.timestamp <= endMs);
+		}
+
+		return result;
+	});
 
 	// Paginated events
 	let paginatedEvents = $derived(
@@ -417,43 +451,91 @@
 	}
 
 	/**
+	 * Generate CSV filename with filter info
+	 */
+	function generateExportFilename(): string {
+		const parts = ['clad-events'];
+
+		// Add filter type
+		if (selectedFilter !== 'all') {
+			parts.push(selectedFilter.toLowerCase());
+		}
+
+		// Add date range
+		if (dateRangeStart && dateRangeEnd) {
+			parts.push(`${dateRangeStart}_to_${dateRangeEnd}`);
+		} else if (dateRangeStart) {
+			parts.push(`from_${dateRangeStart}`);
+		} else if (dateRangeEnd) {
+			parts.push(`until_${dateRangeEnd}`);
+		} else {
+			parts.push(new Date().toISOString().split('T')[0]);
+		}
+
+		return `${parts.join('-')}.csv`;
+	}
+
+	/**
 	 * Export events to CSV
 	 */
-	function exportCSV() {
+	async function exportCSV() {
 		if (filteredEvents.length === 0) return;
 
-		const headers = ['Type', 'Block', 'Block Hash', 'Timestamp', 'Account/From', 'To', 'Amount'];
-		const rows = filteredEvents.map((e) => {
-			const from = (e.data.from || e.data.account || '') as string;
-			const to = (e.data.to || '') as string;
-			const amount = e.data.amount ? formatAmount(e.data.amount as string) : '';
-			const timestamp = e.timestamp ? new Date(e.timestamp).toISOString() : '';
+		isExporting = true;
 
-			return [e.type, e.blockNumber.toString(), e.blockHash, timestamp, from, to, amount];
-		});
+		// Small delay to show loading state for better UX
+		await new Promise((resolve) => setTimeout(resolve, 100));
 
-		const csvContent = [headers, ...rows]
-			.map((row) => row.map((cell) => `"${cell}"`).join(','))
-			.join('\n');
+		try {
+			const headers = ['Type', 'Block', 'Block Hash', 'Timestamp', 'Account/From', 'To', 'Amount'];
+			const rows = filteredEvents.map((e) => {
+				const from = (e.data.from || e.data.account || '') as string;
+				const to = (e.data.to || '') as string;
+				const amount = e.data.amount ? formatAmount(e.data.amount as string) : '';
+				const timestamp = e.timestamp ? new Date(e.timestamp).toISOString() : '';
 
-		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-		const url = URL.createObjectURL(blob);
-		const filename = `clad-events-${new Date().toISOString().split('T')[0]}.csv`;
+				return [e.type, e.blockNumber.toString(), e.blockHash, timestamp, from, to, amount];
+			});
 
-		const link = document.createElement('a');
-		link.style.cssText = 'position:fixed;left:-9999px';
-		link.href = url;
-		link.download = filename;
-		link.setAttribute('data-sveltekit-reload', '');
-		document.body.appendChild(link);
+			const csvContent = [headers, ...rows]
+				.map((row) => row.map((cell) => `"${cell}"`).join(','))
+				.join('\n');
 
-		setTimeout(() => {
+			const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+			const url = URL.createObjectURL(blob);
+			const filename = generateExportFilename();
+
+			const link = document.createElement('a');
+			link.style.cssText = 'position:fixed;left:-9999px';
+			link.href = url;
+			link.download = filename;
+			link.setAttribute('data-sveltekit-reload', '');
+			document.body.appendChild(link);
+
 			link.click();
+
 			setTimeout(() => {
 				document.body.removeChild(link);
 				URL.revokeObjectURL(url);
 			}, 100);
-		}, 0);
+
+			// Show success toast
+			showExportSuccess = true;
+			setTimeout(() => {
+				showExportSuccess = false;
+			}, 3000);
+		} finally {
+			isExporting = false;
+		}
+	}
+
+	/**
+	 * Clear date range filters
+	 */
+	function clearDateFilters() {
+		dateRangeStart = '';
+		dateRangeEnd = '';
+		currentPage = 1;
 	}
 
 	/**
@@ -477,16 +559,45 @@
 		</div>
 		{#if events.length > 0}
 			<div class="flex gap-2">
-				<button type="button" class="btn btn-secondary" onclick={exportCSV}>
-					<svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-						/>
-					</svg>
-					Export CSV
+				<button
+					type="button"
+					class="btn btn-secondary"
+					onclick={exportCSV}
+					disabled={isExporting || filteredEvents.length === 0}
+				>
+					{#if isExporting}
+						<svg
+							class="mr-2 h-4 w-4 animate-spin"
+							fill="none"
+							viewBox="0 0 24 24"
+							stroke="currentColor"
+						>
+							<circle
+								class="opacity-25"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								stroke-width="4"
+							></circle>
+							<path
+								class="opacity-75"
+								fill="currentColor"
+								d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+							></path>
+						</svg>
+						Exporting...
+					{:else}
+						<svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+							/>
+						</svg>
+						Export CSV
+					{/if}
 				</button>
 				<button
 					type="button"
@@ -509,7 +620,8 @@
 	</div>
 
 	<!-- Filters -->
-	<div class="card">
+	<div class="card space-y-4">
+		<!-- Event Type Filter -->
 		<div class="flex flex-wrap items-center gap-2">
 			<span class="text-sm font-medium text-[var(--color-slate)]">Filter by type:</span>
 			<button
@@ -533,6 +645,35 @@
 					{eventType} ({count})
 				</button>
 			{/each}
+		</div>
+
+		<!-- Date Range Filter -->
+		<div class="flex flex-wrap items-center gap-3 border-t border-[var(--color-border)] pt-4">
+			<span class="text-sm font-medium text-[var(--color-slate)]">Date range:</span>
+			<div class="flex items-center gap-2">
+				<input
+					type="date"
+					bind:value={dateRangeStart}
+					class="rounded-md border border-[var(--color-border)] bg-white px-3 py-1.5 text-sm text-[var(--color-navy)] focus:border-[var(--color-teal)] focus:ring-1 focus:ring-[var(--color-teal)] focus:outline-none"
+					onchange={() => (currentPage = 1)}
+				/>
+				<span class="text-sm text-[var(--color-slate-light)]">to</span>
+				<input
+					type="date"
+					bind:value={dateRangeEnd}
+					class="rounded-md border border-[var(--color-border)] bg-white px-3 py-1.5 text-sm text-[var(--color-navy)] focus:border-[var(--color-teal)] focus:ring-1 focus:ring-[var(--color-teal)] focus:outline-none"
+					onchange={() => (currentPage = 1)}
+				/>
+			</div>
+			{#if dateRangeStart || dateRangeEnd}
+				<button
+					type="button"
+					class="text-sm text-[var(--color-slate)] hover:text-[var(--color-navy)]"
+					onclick={clearDateFilters}
+				>
+					Clear dates
+				</button>
+			{/if}
 		</div>
 	</div>
 
@@ -797,3 +938,15 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Export Success Toast -->
+{#if showExportSuccess}
+	<div
+		class="fixed right-4 bottom-4 z-50 flex items-center gap-3 rounded-lg bg-[var(--color-success)] px-4 py-3 text-white shadow-lg"
+	>
+		<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+		</svg>
+		<span class="text-sm font-medium">CSV exported successfully</span>
+	</div>
+{/if}
