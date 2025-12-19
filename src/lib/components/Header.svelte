@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { subscribeToConnectionState, type ConnectionState } from '$lib/substrate';
 	import { onMount, onDestroy } from 'svelte';
+	import StatusDot from './StatusDot.svelte';
 
 	let connectionState: ConnectionState = $state('disconnected');
 	let unsubscribe: (() => void) | null = null;
@@ -14,13 +15,6 @@
 	onDestroy(() => {
 		if (unsubscribe) unsubscribe();
 	});
-
-	const statusColors: Record<ConnectionState, string> = {
-		connected: 'status-connected',
-		connecting: 'status-pending',
-		disconnected: 'status-disconnected',
-		error: 'status-disconnected'
-	};
 
 	const statusLabels: Record<ConnectionState, string> = {
 		connected: 'Connected',
@@ -94,7 +88,7 @@
 		<!-- Connection Status -->
 		<div class="flex items-center gap-4">
 			<div class="flex items-center gap-2">
-				<div class={`status-dot ${statusColors[connectionState]}`}></div>
+				<StatusDot status={connectionState} />
 				<span class="text-sm text-[var(--color-slate)]">
 					{statusLabels[connectionState]}
 				</span>

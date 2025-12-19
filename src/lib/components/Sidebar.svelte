@@ -35,8 +35,8 @@
 					<a
 						href={item.href}
 						class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {isActive
-							? 'bg-[var(--color-navy)] text-white'
-							: 'text-[var(--color-slate)] hover:bg-[var(--color-cream)] hover:text-[var(--color-navy)]'}"
+							? 'border-l-4 border-[var(--color-navy)] bg-[var(--color-cream)] text-[var(--color-navy)]'
+							: 'border-l-4 border-transparent text-[var(--color-slate)] hover:bg-[var(--color-cream)] hover:text-[var(--color-navy)]'}"
 					>
 						<svg
 							class="h-5 w-5"
