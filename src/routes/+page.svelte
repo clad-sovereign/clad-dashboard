@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { subscribeToConnectionState, getApiOrNull, type ConnectionState } from '$lib/substrate';
+	import { StatusDot } from '$lib/components';
 
 	let connectionState: ConnectionState = $state('disconnected');
 	let chainInfo = $state({
@@ -102,13 +103,7 @@
 		<div class="card">
 			<div class="flex items-center justify-between">
 				<h3 class="text-sm font-medium text-[var(--color-slate-light)]">Node Status</h3>
-				<div
-					class="status-dot {connectionState === 'connected'
-						? 'status-connected'
-						: connectionState === 'connecting'
-							? 'status-pending'
-							: 'status-disconnected'}"
-				></div>
+				<StatusDot status={connectionState} />
 			</div>
 			<p class="mt-2 text-2xl font-semibold text-[var(--color-navy)]">
 				{connectionState === 'connected'
