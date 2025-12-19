@@ -36,11 +36,29 @@ Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ### Connect to Local Node
 
-In a separate terminal, start a local clad-node:
+In the clad-studio directory, start a two-node local network for development:
 
 ```bash
-# In clad-studio directory
-./target/release/clad-node --dev --tmp
+# Terminal 1 - Start Alice (bootnode)
+./target/release/clad-node \
+  --chain local \
+  --alice \
+  --validator \
+  --tmp \
+  --port 30333 \
+  --rpc-port 9944 \
+  --node-key 0000000000000000000000000000000000000000000000000000000000000001
+
+# Terminal 2 - Start Bob (connects to Alice)
+./target/release/clad-node \
+  --chain local \
+  --bob \
+  --validator \
+  --tmp \
+  --port 30334 \
+  --rpc-port 9945 \
+  --node-key 0000000000000000000000000000000000000000000000000000000000000002 \
+  --bootnodes /ip4/127.0.0.1/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp
 ```
 
 The dashboard will automatically connect to `ws://127.0.0.1:9944`.
