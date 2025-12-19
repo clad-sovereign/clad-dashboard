@@ -139,11 +139,14 @@
 		error = null;
 	}
 
+	// Hidden download link reference
+	let downloadLink: HTMLAnchorElement;
+
 	/**
 	 * Export results to CSV
 	 */
 	function exportCSV() {
-		if (results.length === 0) return;
+		if (results.length === 0 || !downloadLink) return;
 
 		const headers = ['Address', 'Status', 'Error'];
 		const rows = results.map((r) => [
@@ -158,11 +161,12 @@
 
 		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 		const url = URL.createObjectURL(blob);
-		const link = document.createElement('a');
-		link.href = url;
-		link.download = `whitelist-check-${new Date().toISOString().split('T')[0]}.csv`;
-		link.click();
-		URL.revokeObjectURL(url);
+
+		downloadLink.href = url;
+		downloadLink.download = `whitelist-check-${new Date().toISOString().split('T')[0]}.csv`;
+		downloadLink.click();
+
+		setTimeout(() => URL.revokeObjectURL(url), 1000);
 	}
 
 	// Derived counts
@@ -170,6 +174,9 @@
 	let notApprovedCount = $derived(results.filter((r) => !r.isWhitelisted && !r.error).length);
 	let errorCount = $derived(results.filter((r) => r.error).length);
 </script>
+
+<!-- Hidden download link to bypass SvelteKit routing -->
+<a bind:this={downloadLink} data-sveltekit-reload class="hidden" aria-hidden="true">Download</a>
 
 <div class="space-y-6">
 	<!-- Page Header -->
