@@ -9,6 +9,7 @@
 		type CladTokenEventType,
 		type TokenEvent
 	} from '$lib/substrate/types';
+	import { formatDateTime } from '$lib/utils';
 	import type { ApiPromise } from '@polkadot/api';
 
 	// Connection state
@@ -556,19 +557,11 @@
 	}
 
 	/**
-	 * Format timestamp for display
+	 * Format timestamp for display (locale-aware)
 	 */
 	function formatTimestamp(timestamp: number | null): string {
 		if (!timestamp) return '';
-		const date = new Date(timestamp);
-		// Format as "Dec 19, 3:45 PM"
-		return date.toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			hour: 'numeric',
-			minute: '2-digit',
-			hour12: true
-		});
+		return formatDateTime(timestamp, 'medium', 'short');
 	}
 
 	/**
