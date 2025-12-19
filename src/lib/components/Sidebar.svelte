@@ -49,7 +49,7 @@
 <aside
 	class="fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] w-64 flex-col border-r border-[var(--color-border)] bg-white transition-transform duration-200 ease-in-out lg:static lg:flex lg:h-auto lg:translate-x-0 {mobileMenuOpen
 		? 'flex translate-x-0'
-		: 'hidden -translate-x-full'}"
+		: 'hidden'}"
 >
 	<nav class="flex-1 overflow-y-auto px-4 py-6">
 		<ul class="space-y-1">
