@@ -21,6 +21,9 @@
 	let isLoading = $state(false);
 	let error = $state<string | null>(null);
 
+	// Chain reset notification
+	let showChainResetNotice = $state(false);
+
 	// localStorage keys
 	const STORAGE_KEY = 'clad-token-events';
 	const STORAGE_GENESIS_KEY = 'clad-token-events-genesis';
@@ -79,7 +82,7 @@
 	}
 
 	/**
-	 * Clear stored events
+	 * Clear stored events and reset UI state
 	 */
 	function clearStoredEvents() {
 		try {
@@ -89,6 +92,12 @@
 			console.warn('Failed to clear localStorage:', e);
 		}
 		events = [];
+		// Reset filters and pagination to avoid broken UI state
+		selectedFilter = 'all';
+		dateRangeStart = '';
+		dateRangeEnd = '';
+		currentPage = 1;
+		error = null;
 	}
 
 	// Filter state
@@ -177,16 +186,94 @@
 	// Total pages
 	let totalPages = $derived(Math.ceil(filteredEvents.length / PAGE_SIZE));
 
+	/**
+	 * Check if chain was reset by comparing stored events with current chain state.
+	 * Detects resets via:
+	 * 1. Genesis hash change (different chain)
+	 * 2. Block height regression (chain restarted with --tmp)
+	 */
+	async function detectChainReset(api: ApiPromise): Promise<boolean> {
+		try {
+			const newGenesisHash = api.genesisHash.toHex();
+			const storedGenesisHash = localStorage.getItem(STORAGE_GENESIS_KEY);
+
+			// Genesis hash changed - definitely a different chain
+			if (storedGenesisHash && storedGenesisHash !== newGenesisHash) {
+				return true;
+			}
+
+			// Check if stored events reference blocks higher than current chain height
+			// This detects restarts with --tmp where genesis stays the same
+			const storedEvents = loadEventsFromStorage(newGenesisHash);
+			if (storedEvents.length > 0) {
+				const highestStoredBlock = Math.max(...storedEvents.map((e) => e.blockNumber));
+				const currentHeader = await api.rpc.chain.getHeader();
+				const currentBlockNumber = currentHeader.number.toNumber();
+
+				// If our stored events reference blocks higher than current chain, it was reset
+				if (highestStoredBlock > currentBlockNumber) {
+					return true;
+				}
+
+				// Additional check: verify a stored block hash still exists
+				// This catches edge cases where block numbers match but history differs
+				const sampleEvent = storedEvents[0];
+				try {
+					const blockHeader = await api.rpc.chain.getHeader(sampleEvent.blockHash);
+					// If we get here but block number doesn't match, chain was reset
+					if (blockHeader.number.toNumber() !== sampleEvent.blockNumber) {
+						return true;
+					}
+				} catch {
+					// Block hash not found - chain was reset
+					return true;
+				}
+			}
+
+			return false;
+		} catch (e) {
+			console.warn('Error detecting chain reset:', e);
+			// On error, assume chain might have reset to be safe
+			return false;
+		}
+	}
+
 	onMount(() => {
 		unsubscribeState = subscribeToConnectionState(async (state) => {
 			connectionState = state;
 
 			if (state === 'connected') {
+				const api = getApiOrNull();
+				if (api) {
+					// Check for chain reset on every reconnection
+					const wasReset = await detectChainReset(api);
+
+					if (wasReset) {
+						// Chain was reset - clear all stored events
+						clearStoredEvents();
+						showChainResetNotice = true;
+						setTimeout(() => {
+							showChainResetNotice = false;
+						}, 5000);
+					}
+
+					// Clean up any existing subscription before starting new one
+					if (unsubscribeBlocks) {
+						unsubscribeBlocks();
+						unsubscribeBlocks = null;
+					}
+				}
+
 				await startEventSubscription();
 			} else {
+				// Disconnected or error - clean up subscription
 				if (unsubscribeBlocks) {
 					unsubscribeBlocks();
 					unsubscribeBlocks = null;
+				}
+				// Clear error on disconnect (will show appropriate warning in UI)
+				if (state === 'disconnected') {
+					error = null;
 				}
 			}
 		});
@@ -312,11 +399,28 @@
 			// Fetch recent events from past blocks (will merge with stored)
 			await fetchRecentEvents(api, genesisHash);
 
+			// Track consecutive errors to detect persistent issues
+			let consecutiveErrors = 0;
+			const MAX_CONSECUTIVE_ERRORS = 3;
+
 			// Then subscribe to new blocks
 			const unsub = await api.rpc.chain.subscribeNewHeads(async (header) => {
 				try {
 					const blockHash = header.hash.toHex();
 					const blockNumber = header.number.toNumber();
+
+					// Detect chain reset during subscription: if current block is lower than highest stored
+					if (events.length > 0) {
+						const highestStoredBlock = Math.max(...events.map((e) => e.blockNumber));
+						if (blockNumber < highestStoredBlock && blockNumber < 10) {
+							// Chain likely reset - new block number is very low but we have higher stored
+							clearStoredEvents();
+							showChainResetNotice = true;
+							setTimeout(() => {
+								showChainResetNotice = false;
+							}, 5000);
+						}
+					}
 
 					// Get events and timestamp for this block
 					const apiAt = await api.at(blockHash);
@@ -329,14 +433,29 @@
 					const newEvents = parseBlockEvents(blockNumber, blockHash, blockTimestamp, eventsArray);
 
 					if (newEvents.length > 0) {
-						// Prepend new events and keep max 500
-						const updatedEvents = [...newEvents, ...events].slice(0, 500);
-						events = updatedEvents;
-						// Persist to localStorage
-						saveEventsToStorage(updatedEvents, genesisHash);
+						// Filter out duplicates before adding
+						const existingIds = new Set(events.map((e) => e.id));
+						const uniqueNewEvents = newEvents.filter((e) => !existingIds.has(e.id));
+
+						if (uniqueNewEvents.length > 0) {
+							// Prepend new events and keep max 500
+							const updatedEvents = [...uniqueNewEvents, ...events].slice(0, 500);
+							events = updatedEvents;
+							// Persist to localStorage
+							saveEventsToStorage(updatedEvents, genesisHash);
+						}
 					}
+
+					// Reset error counter on success
+					consecutiveErrors = 0;
 				} catch (e) {
+					consecutiveErrors++;
 					console.error('Failed to process block events:', e);
+
+					// If we're getting repeated errors, there may be an issue with the connection
+					if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+						error = 'Multiple errors processing blocks. The node may have been restarted.';
+					}
 				}
 			});
 
@@ -951,5 +1070,27 @@
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 		</svg>
 		<span class="text-sm font-medium">CSV exported successfully</span>
+	</div>
+{/if}
+
+<!-- Chain Reset Notice -->
+{#if showChainResetNotice}
+	<div
+		role="alert"
+		aria-live="assertive"
+		class="fixed right-4 bottom-4 z-50 flex items-center gap-3 rounded-lg bg-[var(--color-warning)] px-4 py-3 text-white shadow-lg"
+	>
+		<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+			<path
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				stroke-width="2"
+				d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+			/>
+		</svg>
+		<div>
+			<span class="text-sm font-medium">Chain reset detected</span>
+			<p class="text-xs opacity-90">Event history has been cleared</p>
+		</div>
 	</div>
 {/if}
