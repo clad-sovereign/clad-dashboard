@@ -71,17 +71,66 @@ export interface TokenEvent {
 }
 
 /**
- * Multi-sig approval info
+ * Timepoint for multisig operations
+ */
+export interface MultisigTimepoint {
+	height: number;
+	index: number;
+}
+
+/**
+ * Multi-sig approval info (from storage)
  */
 export interface MultisigInfo {
 	threshold: number;
 	signatories: string[];
 	approvals: string[];
 	callHash: string;
-	when: {
-		height: number;
-		index: number;
+	when: MultisigTimepoint;
+}
+
+/**
+ * Token operation types that can be proposed via multisig
+ */
+export type TokenOperationType =
+	| 'Mint'
+	| 'Transfer'
+	| 'Freeze'
+	| 'Unfreeze'
+	| 'AddToWhitelist'
+	| 'RemoveFromWhitelist'
+	| 'SetAdmin'
+	| 'Unknown';
+
+/**
+ * Decoded token operation from call data
+ */
+export interface TokenOperation {
+	type: TokenOperationType;
+	params: {
+		to?: string;
+		from?: string;
+		account?: string;
+		amount?: bigint;
+		newAdmin?: string;
 	};
+}
+
+/**
+ * A pending multisig proposal
+ */
+export interface PendingProposal {
+	id: string;
+	multisigAccount: string;
+	callHash: string;
+	operation: TokenOperation;
+	depositor: string;
+	deposit: bigint;
+	approvals: string[];
+	threshold: number;
+	signatories: string[];
+	when: MultisigTimepoint;
+	timestamp: number | null;
 }
 
 /**
@@ -89,8 +138,8 @@ export interface MultisigInfo {
  * These should match the values in clad-mobile's TokenConfig.kt
  */
 export const TOKEN_CONFIG = {
-	/** Native token decimals (for fees) */
-	NATIVE_DECIMALS: 18,
+	/** Native token decimals (for fees) - clad-node uses 12 */
+	NATIVE_DECIMALS: 12,
 	/** CLAD token decimals (RWA standard) */
 	CLAD_DECIMALS: 6,
 	/** Pallet index for pallet-clad-token */
