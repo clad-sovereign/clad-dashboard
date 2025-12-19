@@ -1,9 +1,24 @@
 <script lang="ts">
 	import './layout.css';
+	import { onMount, onDestroy } from 'svelte';
 	import favicon from '$lib/assets/favicon.svg';
 	import { Header, Sidebar } from '$lib/components';
+	import { connect, disconnect } from '$lib/substrate';
 
 	let { children } = $props();
+
+	onMount(async () => {
+		// Establish connection to the Substrate node on app load
+		try {
+			await connect();
+		} catch (error) {
+			console.error('Failed to connect to node:', error);
+		}
+	});
+
+	onDestroy(async () => {
+		await disconnect();
+	});
 </script>
 
 <svelte:head>

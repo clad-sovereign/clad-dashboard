@@ -1,15 +1,8 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import {
-		connect,
-		disconnect,
-		subscribeToConnectionState,
-		type ConnectionState
-	} from '$lib/substrate';
-	import type { ApiPromise } from '@polkadot/api';
+	import { subscribeToConnectionState, getApiOrNull, type ConnectionState } from '$lib/substrate';
 
 	let connectionState: ConnectionState = $state('disconnected');
-	let api: ApiPromise | null = $state(null);
 	let chainInfo = $state({
 		name: '-',
 		version: '-',
@@ -27,59 +20,62 @@
 	let unsubscribeState: (() => void) | null = null;
 	let unsubscribeBlocks: (() => void) | null = null;
 
-	onMount(async () => {
-		// Subscribe to connection state
-		unsubscribeState = subscribeToConnectionState((state) => {
+	onMount(() => {
+		// Subscribe to connection state changes
+		unsubscribeState = subscribeToConnectionState(async (state) => {
 			connectionState = state;
-		});
 
-		// Try to connect
-		try {
-			api = await connect();
+			// When connected, fetch chain info and subscribe to blocks
+			if (state === 'connected') {
+				const api = getApiOrNull();
+				if (!api) return;
 
-			// Get chain info
-			const [chain, nodeName, nodeVersion] = await Promise.all([
-				api.rpc.system.chain(),
-				api.rpc.system.name(),
-				api.rpc.system.version()
-			]);
+				try {
+					// Get chain info
+					const [chain, nodeName, nodeVersion] = await Promise.all([
+						api.rpc.system.chain(),
+						api.rpc.system.name(),
+						api.rpc.system.version()
+					]);
 
-			chainInfo = {
-				name: chain.toString(),
-				version: `${nodeName} ${nodeVersion}`,
-				genesisHash: api.genesisHash.toHex().slice(0, 16) + '...'
-			};
-
-			// Subscribe to new blocks
-			const unsub = await api.rpc.chain.subscribeNewHeads((header) => {
-				latestBlock = {
-					number: header.number.toNumber(),
-					hash: header.hash.toHex().slice(0, 16) + '...'
-				};
-			});
-			unsubscribeBlocks = unsub;
-
-			// Try to get token info (if pallet-clad-token exists)
-			try {
-				const totalSupply = await api.query.cladToken?.totalSupply?.();
-				if (totalSupply) {
-					tokenInfo = {
-						totalSupply: totalSupply.toString(),
-						decimals: 6
+					chainInfo = {
+						name: chain.toString(),
+						version: `${nodeName} ${nodeVersion}`,
+						genesisHash: api.genesisHash.toHex().slice(0, 16) + '...'
 					};
+
+					// Subscribe to new blocks
+					if (unsubscribeBlocks) unsubscribeBlocks();
+					const unsub = await api.rpc.chain.subscribeNewHeads((header) => {
+						latestBlock = {
+							number: header.number.toNumber(),
+							hash: header.hash.toHex().slice(0, 16) + '...'
+						};
+					});
+					unsubscribeBlocks = unsub;
+
+					// Try to get token info (if pallet-clad-token exists)
+					try {
+						const totalSupply = await api.query.cladToken?.totalSupply?.();
+						if (totalSupply) {
+							tokenInfo = {
+								totalSupply: totalSupply.toString(),
+								decimals: 6
+							};
+						}
+					} catch {
+						// pallet might not exist yet
+					}
+				} catch (error) {
+					console.error('Failed to fetch chain info:', error);
 				}
-			} catch {
-				// pallet might not exist yet
 			}
-		} catch (error) {
-			console.error('Failed to connect:', error);
-		}
+		});
 	});
 
-	onDestroy(async () => {
+	onDestroy(() => {
 		if (unsubscribeState) unsubscribeState();
 		if (unsubscribeBlocks) unsubscribeBlocks();
-		await disconnect();
 	});
 
 	function formatSupply(supply: string, decimals: number): string {
