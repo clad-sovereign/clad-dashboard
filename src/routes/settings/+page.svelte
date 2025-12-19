@@ -383,24 +383,69 @@
 
 	<!-- Help Section -->
 	<div class="card">
-		<h2 class="text-lg font-medium text-[var(--color-navy)]">Connection Help</h2>
-		<div class="mt-4 space-y-3 text-sm text-[var(--color-slate)]">
-			<div>
+		<details class="group">
+			<summary class="cursor-pointer list-none">
+				<div class="flex items-center justify-between">
+					<h2 class="text-lg font-medium text-[var(--color-navy)]">Connection Help</h2>
+					<svg
+						class="h-5 w-5 text-[var(--color-navy)] transition-transform duration-200 group-open:rotate-180"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M19 9l-7 7-7-7"
+						/>
+					</svg>
+				</div>
+				<div class="mt-4 text-sm text-[var(--color-slate)]">
+					<h3 class="font-medium text-[var(--color-navy)]">Secure Connections</h3>
+					<p class="mt-1">
+						For production nodes, use <code class="font-mono">wss://</code> for secure WebSocket connections.
+					</p>
+				</div>
+			</summary>
+			<div class="mt-4 text-sm text-[var(--color-slate)]">
 				<h3 class="font-medium text-[var(--color-navy)]">Local Development</h3>
-				<p class="mt-1">For local development, run your clad-node with:</p>
-				<code class="mt-2 block rounded bg-[var(--color-cream)] px-3 py-2 font-mono text-xs">
-					./target/release/clad-node --dev --tmp
-				</code>
+				<p class="mt-1">For local development, start a two-node network:</p>
+				<div class="mt-2 space-y-3">
+					<div>
+						<p class="mb-1 text-xs text-[var(--color-slate-light)]">
+							Terminal 1 - Start Alice (bootnode)
+						</p>
+						<pre
+							class="overflow-x-auto rounded bg-[var(--color-cream)] px-3 py-2 font-mono text-xs">./target/release/clad-node \
+  --chain local \
+  --alice \
+  --validator \
+  --tmp \
+  --port 30333 \
+  --rpc-port 9944 \
+  --node-key 0000000000000000000000000000000000000000000000000000000000000001</pre>
+					</div>
+					<div>
+						<p class="mb-1 text-xs text-[var(--color-slate-light)]">
+							Terminal 2 - Start Bob (connects to Alice)
+						</p>
+						<pre
+							class="overflow-x-auto rounded bg-[var(--color-cream)] px-3 py-2 font-mono text-xs">./target/release/clad-node \
+  --chain local \
+  --bob \
+  --validator \
+  --tmp \
+  --port 30334 \
+  --rpc-port 9945 \
+  --node-key 0000000000000000000000000000000000000000000000000000000000000002 \
+  --bootnodes /ip4/127.0.0.1/tcp/30333/p2p/12D3KooWEyoppNCUx8Yx66oV9fJnriXwCcXwDDUA2kj6vnc6iDEp</pre>
+					</div>
+				</div>
 				<p class="mt-2">
 					Default endpoint: <code class="font-mono">ws://127.0.0.1:9944</code>
 				</p>
 			</div>
-			<div>
-				<h3 class="font-medium text-[var(--color-navy)]">Secure Connections</h3>
-				<p class="mt-1">
-					For production nodes, use <code class="font-mono">wss://</code> for secure WebSocket connections.
-				</p>
-			</div>
-		</div>
+		</details>
 	</div>
 </div>
