@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { subscribeToConnectionState, getApiOrNull, type ConnectionState } from '$lib/substrate';
-	import { StatusDot } from '$lib/components';
+	import { StatusDot, AdminStatusWidget } from '$lib/components';
 
 	let connectionState: ConnectionState = $state('disconnected');
 	let chainInfo = $state({
@@ -149,46 +149,52 @@
 		</div>
 	</div>
 
-	<!-- Quick Actions -->
-	<div class="card">
-		<h2 class="text-lg font-semibold text-[var(--color-navy)]">Quick Actions</h2>
-		<p class="mt-1 text-sm text-[var(--color-text-muted)]">
-			Common operations for token management
-		</p>
-		<div class="mt-4 flex flex-wrap gap-3">
-			<a href="/balances" class="btn btn-primary">
-				<svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-					/>
-				</svg>
-				Lookup Balance
-			</a>
-			<a href="/whitelist" class="btn btn-secondary">
-				<svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-					/>
-				</svg>
-				Check Whitelist
-			</a>
-			<a href="/events" class="btn btn-secondary">
-				<svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-					/>
-				</svg>
-				View Events
-			</a>
+	<!-- Admin Status & Quick Actions -->
+	<div class="grid gap-6 lg:grid-cols-2">
+		<!-- Admin Status Widget -->
+		<AdminStatusWidget />
+
+		<!-- Quick Actions -->
+		<div class="card">
+			<h2 class="text-lg font-semibold text-[var(--color-navy)]">Quick Actions</h2>
+			<p class="mt-1 text-sm text-[var(--color-text-muted)]">
+				Common operations for token management
+			</p>
+			<div class="mt-4 flex flex-wrap gap-3">
+				<a href="/balances" class="btn btn-primary">
+					<svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+						/>
+					</svg>
+					Lookup Balance
+				</a>
+				<a href="/whitelist" class="btn btn-secondary">
+					<svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+					Check Whitelist
+				</a>
+				<a href="/events" class="btn btn-secondary">
+					<svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+						/>
+					</svg>
+					View Events
+				</a>
+			</div>
 		</div>
 	</div>
 

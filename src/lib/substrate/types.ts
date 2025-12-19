@@ -134,6 +134,29 @@ export interface PendingProposal {
 }
 
 /**
+ * Admin account type
+ */
+export type AdminType = 'root' | 'multisig' | 'unknown';
+
+/**
+ * Admin status information
+ */
+export interface AdminStatus {
+	/** Whether an admin is set */
+	hasAdmin: boolean;
+	/** The admin account address (SS58) */
+	address: string | null;
+	/** Type of admin (root for dev, multisig for production) */
+	type: AdminType;
+	/** If multisig, the configuration details */
+	multisigConfig?: {
+		name: string;
+		threshold: number;
+		signatories: Array<{ address: string; name?: string }>;
+	};
+}
+
+/**
  * Token configuration constants
  * These should match the values in clad-mobile's TokenConfig.kt
  */
