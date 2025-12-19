@@ -7,7 +7,6 @@
 		type ConnectionState
 	} from '$lib/substrate';
 	import type { ApiPromise } from '@polkadot/api';
-	import { resolve } from '$app/paths';
 
 	let connectionState: ConnectionState = $state('disconnected');
 	let api: ApiPromise | null = $state(null);
@@ -166,7 +165,7 @@
 			Common operations for token management
 		</p>
 		<div class="mt-4 flex flex-wrap gap-3">
-			<a href={resolve('/balances', {})} class="btn btn-primary">
+			<a href="/balances" class="btn btn-primary">
 				<svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path
 						stroke-linecap="round"
@@ -177,7 +176,7 @@
 				</svg>
 				Lookup Balance
 			</a>
-			<a href={resolve('/whitelist', {})} class="btn btn-secondary">
+			<a href="/whitelist" class="btn btn-secondary">
 				<svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path
 						stroke-linecap="round"
@@ -188,7 +187,7 @@
 				</svg>
 				Check Whitelist
 			</a>
-			<a href={resolve('/events', {})} class="btn btn-secondary">
+			<a href="/events" class="btn btn-secondary">
 				<svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 					<path
 						stroke-linecap="round"

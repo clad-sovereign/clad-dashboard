@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { subscribeToConnectionState, type ConnectionState } from '$lib/substrate';
 	import { onMount, onDestroy } from 'svelte';
-	import { resolve } from '$app/paths';
 
 	let connectionState: ConnectionState = $state('disconnected');
 	let unsubscribe: (() => void) | null = null;
@@ -37,7 +36,7 @@
 	<div class="flex h-16 items-center justify-between px-6">
 		<!-- Logo -->
 		<div class="flex items-center gap-3">
-			<a href={resolve('/', {})} class="flex items-center gap-3">
+			<a href="/" class="flex items-center gap-3">
 				<div
 					class="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-navy)] text-white"
 				>
@@ -67,25 +66,25 @@
 		<!-- Navigation -->
 		<nav class="hidden items-center gap-6 md:flex">
 			<a
-				href={resolve('/', {})}
+				href="/"
 				class="text-sm font-medium text-[var(--color-slate)] transition-colors hover:text-[var(--color-navy)]"
 			>
 				Overview
 			</a>
 			<a
-				href={resolve('/balances', {})}
+				href="/balances"
 				class="text-sm font-medium text-[var(--color-slate)] transition-colors hover:text-[var(--color-navy)]"
 			>
 				Balances
 			</a>
 			<a
-				href={resolve('/whitelist', {})}
+				href="/whitelist"
 				class="text-sm font-medium text-[var(--color-slate)] transition-colors hover:text-[var(--color-navy)]"
 			>
 				Whitelist
 			</a>
 			<a
-				href={resolve('/events', {})}
+				href="/events"
 				class="text-sm font-medium text-[var(--color-slate)] transition-colors hover:text-[var(--color-navy)]"
 			>
 				Events

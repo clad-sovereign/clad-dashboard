@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { resolve } from '$app/paths';
 
 	const navItems = [
 		{ href: '/', label: 'Overview', icon: 'home' },
@@ -34,7 +33,7 @@
 				{@const isActive = $page.url.pathname === item.href}
 				<li>
 					<a
-						href={resolve(item.href, {})}
+						href={item.href}
 						class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {isActive
 							? 'bg-[var(--color-navy)] text-white'
 							: 'text-[var(--color-slate)] hover:bg-[var(--color-cream)] hover:text-[var(--color-navy)]'}"
