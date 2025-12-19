@@ -139,14 +139,11 @@
 		error = null;
 	}
 
-	// Hidden download link reference
-	let downloadLink: HTMLAnchorElement;
-
 	/**
 	 * Export results to CSV
 	 */
 	function exportCSV() {
-		if (results.length === 0 || !downloadLink) return;
+		if (results.length === 0) return;
 
 		const headers = ['Address', 'Status', 'Error'];
 		const rows = results.map((r) => [
@@ -161,12 +158,24 @@
 
 		const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 		const url = URL.createObjectURL(blob);
+		const filename = `whitelist-check-${new Date().toISOString().split('T')[0]}.csv`;
 
-		downloadLink.href = url;
-		downloadLink.download = `whitelist-check-${new Date().toISOString().split('T')[0]}.csv`;
-		downloadLink.click();
+		// Create and inject a temporary link
+		const link = document.createElement('a');
+		link.style.cssText = 'position:fixed;left:-9999px';
+		link.href = url;
+		link.download = filename;
+		link.setAttribute('data-sveltekit-reload', '');
+		document.body.appendChild(link);
 
-		setTimeout(() => URL.revokeObjectURL(url), 1000);
+		// Use setTimeout to ensure DOM is updated before clicking
+		setTimeout(() => {
+			link.click();
+			setTimeout(() => {
+				document.body.removeChild(link);
+				URL.revokeObjectURL(url);
+			}, 100);
+		}, 0);
 	}
 
 	// Derived counts
@@ -174,9 +183,6 @@
 	let notApprovedCount = $derived(results.filter((r) => !r.isWhitelisted && !r.error).length);
 	let errorCount = $derived(results.filter((r) => r.error).length);
 </script>
-
-<!-- Hidden download link to bypass SvelteKit routing -->
-<a bind:this={downloadLink} data-sveltekit-reload class="hidden" aria-hidden="true">Download</a>
 
 <div class="space-y-6">
 	<!-- Page Header -->
