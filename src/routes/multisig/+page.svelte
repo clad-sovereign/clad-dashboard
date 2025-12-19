@@ -11,6 +11,7 @@
 		type MultisigTimepoint
 	} from '$lib/substrate/types';
 	import { getMultisigConfig, getSignatoryDisplayName } from '$lib/config/multisig-accounts';
+	import { formatDateTime } from '$lib/utils';
 	import type { ApiPromise } from '@polkadot/api';
 
 	// Connection state
@@ -256,18 +257,11 @@
 	}
 
 	/**
-	 * Format timestamp for display
+	 * Format timestamp for display (locale-aware)
 	 */
 	function formatTimestamp(timestamp: number | null): string {
 		if (!timestamp) return 'Unknown';
-		const date = new Date(timestamp);
-		return date.toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			hour: 'numeric',
-			minute: '2-digit',
-			hour12: true
-		});
+		return formatDateTime(timestamp, 'medium', 'short');
 	}
 
 	/**
