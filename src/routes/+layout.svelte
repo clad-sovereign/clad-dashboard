@@ -10,6 +10,16 @@
 
 	let { children } = $props();
 
+	let mobileMenuOpen = $state(false);
+
+	function toggleMobileMenu() {
+		mobileMenuOpen = !mobileMenuOpen;
+	}
+
+	function closeMobileMenu() {
+		mobileMenuOpen = false;
+	}
+
 	onMount(async () => {
 		// Load saved endpoint from localStorage or use default
 		let endpoint = DEFAULT_ENDPOINT;
@@ -38,9 +48,9 @@
 </svelte:head>
 
 <div class="flex min-h-screen flex-col">
-	<Header />
+	<Header onMenuToggle={toggleMobileMenu} {mobileMenuOpen} />
 	<div class="flex flex-1">
-		<Sidebar />
+		<Sidebar {mobileMenuOpen} onClose={closeMobileMenu} />
 		<main class="flex-1 overflow-auto p-6">
 			{@render children()}
 		</main>

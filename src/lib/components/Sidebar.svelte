@@ -1,5 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { fade } from 'svelte/transition';
+
+	interface Props {
+		mobileMenuOpen: boolean;
+		onClose: () => void;
+	}
+
+	let { mobileMenuOpen, onClose }: Props = $props();
 
 	const navItems = [
 		{ href: '/', label: 'Overview', icon: 'home' },
@@ -26,14 +34,31 @@
 	};
 </script>
 
-<aside class="hidden w-64 flex-col border-r border-[var(--color-border)] bg-white lg:flex">
-	<nav class="flex-1 px-4 py-6">
+<!-- Mobile overlay backdrop -->
+{#if mobileMenuOpen}
+	<button
+		type="button"
+		class="fixed inset-0 z-40 bg-black/50 lg:hidden"
+		onclick={onClose}
+		aria-label="Close menu"
+		transition:fade={{ duration: 200 }}
+	></button>
+{/if}
+
+<!-- Sidebar -->
+<aside
+	class="fixed top-16 left-0 z-40 h-[calc(100vh-4rem)] w-64 flex-col border-r border-[var(--color-border)] bg-white transition-transform duration-200 ease-in-out lg:static lg:flex lg:h-auto lg:translate-x-0 {mobileMenuOpen
+		? 'flex translate-x-0'
+		: 'hidden -translate-x-full'}"
+>
+	<nav class="flex-1 overflow-y-auto px-4 py-6">
 		<ul class="space-y-1">
 			{#each navItems as item (item.href)}
 				{@const isActive = $page.url.pathname === item.href}
 				<li>
 					<a
 						href={item.href}
+						onclick={onClose}
 						class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors {isActive
 							? 'border-l-4 border-[var(--color-navy)] bg-[var(--color-cream)] text-[var(--color-navy)]'
 							: 'border-l-4 border-transparent text-[var(--color-slate)] hover:bg-[var(--color-cream)] hover:text-[var(--color-navy)]'}"
