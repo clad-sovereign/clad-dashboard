@@ -1,38 +1,97 @@
-# sv
+# Clad Dashboard
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Read-only monitoring dashboard for [Clad](https://clad.so) tokenization infrastructure. Built with SvelteKit and connects to clad-node via Substrate RPC.
 
-## Creating a project
+## Overview
 
-If you're seeing this, you've probably already done this step. Congrats!
+Clad Dashboard provides visibility into the Clad token ecosystem for debt office staff and ministry officials. It displays:
 
-```sh
-# create a new project in the current directory
-npx sv create
+- **Token metrics** - Total supply, balances, whitelist status
+- **Event history** - Mints, transfers, freezes, whitelist changes
+- **Multi-sig status** - Pending approvals and signatory information
+- **Node health** - Connection status, block production, chain info
 
-# create a new project in my-app
-npx sv create my-app
+> **Note:** This dashboard is read-only. Transaction signing is handled by [clad-mobile](https://github.com/clad-sovereign/clad-mobile).
+
+## Quick Start
+
+### Prerequisites
+
+- [Bun](https://bun.sh) (package manager and runtime)
+- A running clad-node instance
+
+### Development
+
+```bash
+# Install dependencies
+bun install
+
+# Start development server
+bun run dev
 ```
 
-## Developing
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### Connect to Local Node
 
-```sh
-npm run dev
+In a separate terminal, start a local clad-node:
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+```bash
+# In clad-studio directory
+./target/release/clad-node --dev
 ```
 
-## Building
+The dashboard will automatically connect to `ws://127.0.0.1:9944`.
 
-To create a production version of your app:
+## Tech Stack
 
-```sh
-npm run build
+- **Framework**: [SvelteKit 2](https://svelte.dev) with Svelte 5 (runes syntax)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com)
+- **Blockchain**: [@polkadot/api](https://polkadot.js.org/docs/api) for Substrate RPC
+- **Runtime**: [Bun](https://bun.sh)
+
+## Project Structure
+
+```
+src/
+├── lib/
+│   ├── components/     # Svelte components (Header, Sidebar)
+│   ├── substrate/      # Polkadot API client and types
+│   └── index.ts
+├── routes/
+│   ├── +layout.svelte  # Root layout
+│   ├── +page.svelte    # Overview dashboard
+│   ├── balances/       # Balance lookup
+│   ├── whitelist/      # Whitelist status
+│   ├── events/         # Event history
+│   ├── multisig/       # Multi-sig approvals
+│   └── settings/       # Configuration
+└── app.html
 ```
 
-You can preview the production build with `npm run preview`.
+## Scripts
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+```bash
+bun run dev       # Start development server
+bun run build     # Production build
+bun run preview   # Preview production build
+bun run check     # TypeScript type checking
+bun run lint      # Run prettier + eslint
+bun run format    # Auto-format code
+```
+
+## Configuration
+
+The dashboard connects to `ws://127.0.0.1:9944` by default. This can be changed in the Settings page (persisted to localStorage).
+
+## Related Projects
+
+| Project | Description |
+|---------|-------------|
+| [clad-studio](https://github.com/clad-sovereign/clad-studio) | Substrate blockchain (pallet-clad-token, runtime, node) |
+| [clad-mobile](https://github.com/clad-sovereign/clad-mobile) | Kotlin Multiplatform mobile signer (iOS/Android) |
+| [clad-website](https://github.com/clad-sovereign/clad-website) | Marketing landing page |
+
+## License
+
+[Apache-2.0](LICENSE)
