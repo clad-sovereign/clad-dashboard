@@ -116,7 +116,18 @@
 				return;
 			}
 
-			const parsedProposals: PendingProposal[] = [];
+			// First pass: parse all entries and collect unique block heights
+			const parsedEntries: Array<{
+				multisigAccount: string;
+				callHash: string;
+				parsed: {
+					when: MultisigTimepoint;
+					deposit: bigint;
+					depositor: string;
+					approvals: string[];
+				};
+			}> = [];
+			const blockHeightsList: number[] = [];
 
 			for (const [key, value] of entries) {
 				// Key structure: [multisigAccount, callHash]
@@ -143,9 +154,28 @@
 				const parsed = parseMultisigValue(unwrappedValue);
 				if (!parsed) continue;
 
-				// Get timestamp for the block when this was proposed
-				const timestamp = await getBlockTimestamp(api, parsed.when.height);
+				parsedEntries.push({ multisigAccount, callHash, parsed });
+				if (!blockHeightsList.includes(parsed.when.height)) {
+					blockHeightsList.push(parsed.when.height);
+				}
+			}
 
+			// Fetch all timestamps in parallel
+			const timestampResults = await Promise.all(
+				blockHeightsList.map(async (height) => ({
+					height,
+					timestamp: await getBlockTimestamp(api, height)
+				}))
+			);
+			const timestampLookup: Record<number, number | null> = {};
+			for (const { height, timestamp } of timestampResults) {
+				timestampLookup[height] = timestamp;
+			}
+
+			// Second pass: build proposals with cached timestamps
+			const parsedProposals: PendingProposal[] = [];
+
+			for (const { multisigAccount, callHash, parsed } of parsedEntries) {
 				// For now, we don't have call data decoding, so operation is Unknown
 				// In production, this would be fetched from an off-chain indexer
 				const operation: TokenOperation = {
@@ -167,7 +197,7 @@
 					threshold: config?.threshold ?? 0,
 					signatories: config?.signatories.map((s) => s.address) ?? [],
 					when: parsed.when,
-					timestamp
+					timestamp: timestampLookup[parsed.when.height] ?? null
 				};
 
 				parsedProposals.push(proposal);
@@ -196,7 +226,8 @@
 	/**
 	 * Filter by multisig account
 	 */
-	function applyFilter() {
+	function applyFilter(e?: Event) {
+		e?.preventDefault();
 		activeMultisigAccount = multisigAccountInput.trim() || null;
 		fetchPendingProposals();
 	}
@@ -361,7 +392,7 @@
 
 	<!-- Filter -->
 	<div class="card">
-		<div class="flex flex-wrap items-end gap-4">
+		<form onsubmit={applyFilter} class="flex flex-wrap items-end gap-4">
 			<div class="min-w-[300px] flex-1">
 				<label for="multisig-account" class="block text-sm font-medium text-[var(--color-slate)]">
 					Filter by Multi-sig Account
@@ -377,9 +408,8 @@
 			</div>
 			<div class="flex gap-2">
 				<button
-					type="button"
+					type="submit"
 					class="btn btn-primary"
-					onclick={applyFilter}
 					disabled={connectionState !== 'connected' || isLoading}
 				>
 					Apply Filter
@@ -388,7 +418,7 @@
 					<button type="button" class="btn btn-secondary" onclick={clearFilter}> Clear </button>
 				{/if}
 			</div>
-		</div>
+		</form>
 		{#if activeMultisigAccount}
 			<div class="mt-3 text-sm text-[var(--color-slate)]">
 				Showing proposals for: <code class="font-mono text-[var(--color-navy)]"
