@@ -1,5 +1,5 @@
 /**
- * Date and number formatting utilities using native Intl APIs.
+ * Date formatting utilities using native Intl APIs.
  * Auto-detects user's browser locale for international deployments.
  */
 
@@ -36,13 +36,4 @@ export function formatDateTime(
  */
 export function formatTime(timestamp: number, style: 'short' | 'medium' = 'short'): string {
 	return new Intl.DateTimeFormat(undefined, { timeStyle: style }).format(new Date(timestamp));
-}
-
-/**
- * Format a number with locale-appropriate separators.
- * @param value - Number to format
- * @param decimals - Maximum fraction digits (default: 0)
- */
-export function formatNumber(value: number, decimals: number = 0): string {
-	return new Intl.NumberFormat(undefined, { maximumFractionDigits: decimals }).format(value);
 }
