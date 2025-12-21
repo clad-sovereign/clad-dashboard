@@ -106,11 +106,12 @@ The dashboard connects to `ws://127.0.0.1:9944` by default. This can be changed 
 
 ## Related Projects
 
-| Project                                                        | Description                                             |
-| -------------------------------------------------------------- | ------------------------------------------------------- |
-| [clad-studio](https://github.com/clad-sovereign/clad-studio)   | Substrate blockchain (pallet-clad-token, runtime, node) |
-| clad-mobile (private)                                          | Kotlin Multiplatform mobile signer (iOS/Android)        |
-| [clad-website](https://github.com/clad-sovereign/clad-website) | Marketing landing page                                  |
+| Project                                                            | Description                                                             |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| [clad-studio](https://github.com/clad-sovereign/clad-studio)       | Substrate blockchain — pallet-clad-token, runtime, node binary          |
+| clad-mobile (private)                                              | Kotlin Multiplatform mobile signer — biometric auth, offline QR signing |
+| [clad-dashboard](https://github.com/clad-sovereign/clad-dashboard) | SvelteKit monitoring dashboard (this repo)                              |
+| [clad-website](https://github.com/clad-sovereign/clad-website)     | Marketing landing page — Astro static site                              |
 
 ## License
 
