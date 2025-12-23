@@ -71,6 +71,7 @@ export function decodeCall(api: ApiPromise, encodedCall: string): DecodedCall {
 			description
 		};
 	} catch (e) {
+		console.debug('Failed to decode call:', e);
 		return {
 			success: false,
 			error: e instanceof Error ? e.message : 'Failed to decode call'
@@ -86,7 +87,7 @@ function parseTokenOperation(palletName: string, callName: string, args: unknown
 	if (palletName === 'cladToken') {
 		const opType = CLAD_TOKEN_CALL_MAP[callName];
 		if (opType) {
-			return parseClalTokenArgs(opType, args);
+			return parseCladTokenArgs(opType, args);
 		}
 	}
 
@@ -97,7 +98,7 @@ function parseTokenOperation(palletName: string, callName: string, args: unknown
 /**
  * Parse cladToken pallet call arguments
  */
-function parseClalTokenArgs(opType: TokenOperationType, args: unknown): TokenOperation {
+function parseCladTokenArgs(opType: TokenOperationType, args: unknown): TokenOperation {
 	// Args is typically an array-like object with named properties
 	const argsObj = args as Record<string, { toString(): string }>;
 
