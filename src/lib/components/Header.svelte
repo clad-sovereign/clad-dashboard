@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { subscribeToConnectionState } from '$lib/substrate';
+	import { subscribeToConnectionState, type ConnectionState } from '$lib/substrate';
 	import { subscribeToServerState, isMockMode, type ServerConnectionState } from '$lib/api';
 	import { onMount, onDestroy } from 'svelte';
 	import StatusDot from './StatusDot.svelte';
