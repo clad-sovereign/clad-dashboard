@@ -274,9 +274,9 @@
 	<!-- Results -->
 	{#if result}
 		<div class="card">
-			<div class="flex items-start justify-between">
+			<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 				<h2 class="text-lg font-semibold text-[var(--color-navy)]">Account Details</h2>
-				<div class="flex gap-2">
+				<div class="flex flex-wrap gap-2">
 					{#if result.isWhitelisted}
 						<span class="badge badge-success">Whitelisted</span>
 					{:else}

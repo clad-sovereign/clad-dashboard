@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { subscribeToConnectionState, getApiOrNull, type ConnectionState } from '$lib/substrate';
+	import {
+		subscribeToConnectionState,
+		getApiOrNull,
+		type ConnectionState,
+		decodeCall
+	} from '$lib/substrate';
 	import {
 		TOKEN_CONFIG,
 		formatBalance,
@@ -12,7 +17,12 @@
 	} from '$lib/substrate/types';
 	import { getMultisigConfig, getSignatoryDisplayName } from '$lib/config/multisig-accounts';
 	import { formatDateTime } from '$lib/utils';
+	import { CardSkeleton } from '$lib/components';
 	import type { ApiPromise } from '@polkadot/api';
+
+	// CLAD Server configuration
+	const CLAD_SERVER_URL =
+		typeof localStorage !== 'undefined' ? localStorage.getItem('clad-server-url') || '' : '';
 
 	// Connection state
 	let connectionState: ConnectionState = $state('disconnected');
@@ -57,6 +67,51 @@
 			console.warn('Failed to get block timestamp:', e);
 		}
 		return null;
+	}
+
+	/**
+	 * Call data from CLAD Server
+	 */
+	interface ServerCallData {
+		callHash: string;
+		encodedCall: string;
+		palletName: string;
+		callName: string;
+		createdBy: string;
+		createdAt: number;
+		description?: string;
+	}
+
+	/**
+	 * Fetch call data from CLAD Server
+	 */
+	async function fetchCallDataFromServer(callHash: string): Promise<ServerCallData | null> {
+		if (!CLAD_SERVER_URL) return null;
+
+		try {
+			const response = await fetch(`${CLAD_SERVER_URL}/api/v1/call-data/${callHash}`);
+			if (!response.ok) return null;
+
+			const result = await response.json();
+			if (result.success && result.data) {
+				return result.data as ServerCallData;
+			}
+		} catch (e) {
+			// Server not available or request failed - silently continue
+			console.debug('Failed to fetch call data from server:', e);
+		}
+		return null;
+	}
+
+	/**
+	 * Decode call data and return operation
+	 */
+	function decodeCallData(api: ApiPromise, encodedCall: string): TokenOperation {
+		const decoded = decodeCall(api, encodedCall);
+		if (decoded.success && decoded.operation) {
+			return decoded.operation;
+		}
+		return { type: 'Unknown', params: {} };
 	}
 
 	/**
@@ -173,16 +228,28 @@
 				timestampLookup[height] = timestamp;
 			}
 
-			// Second pass: build proposals with cached timestamps
+			// Fetch call data from server in parallel (if server configured)
+			const callDataPromises = parsedEntries.map(({ callHash }) =>
+				fetchCallDataFromServer(callHash)
+			);
+			const callDataResults = await Promise.all(callDataPromises);
+			const callDataLookup: Record<string, ServerCallData | null> = {};
+			parsedEntries.forEach(({ callHash }, i) => {
+				callDataLookup[callHash] = callDataResults[i];
+			});
+
+			// Second pass: build proposals with cached timestamps and decoded call data
 			const parsedProposals: PendingProposal[] = [];
 
 			for (const { multisigAccount, callHash, parsed } of parsedEntries) {
-				// For now, we don't have call data decoding, so operation is Unknown
-				// In production, this would be fetched from an off-chain indexer
-				const operation: TokenOperation = {
-					type: 'Unknown',
-					params: {}
-				};
+				// Try to decode call data if available from server
+				let operation: TokenOperation = { type: 'Unknown', params: {} };
+				const serverCallData = callDataLookup[callHash];
+
+				if (serverCallData?.encodedCall) {
+					// Decode using @polkadot/api
+					operation = decodeCallData(api, serverCallData.encodedCall);
+				}
 
 				// Look up multisig configuration (threshold, signatories)
 				const config = getMultisigConfig(multisigAccount);
@@ -347,7 +414,7 @@
 
 <div class="space-y-6">
 	<!-- Page Header -->
-	<div class="flex items-start justify-between">
+	<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 		<div>
 			<h1 class="font-serif text-2xl text-[var(--color-navy)]">Pending Approvals</h1>
 			<p class="mt-1 text-sm text-[var(--color-text-muted)]">
@@ -458,20 +525,7 @@
 
 	<!-- Loading state -->
 	{#if isLoading}
-		<div class="card">
-			<div class="flex items-center justify-center py-12">
-				<svg class="h-8 w-8 animate-spin text-[var(--color-navy)]" viewBox="0 0 24 24" fill="none">
-					<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
-					></circle>
-					<path
-						class="opacity-75"
-						fill="currentColor"
-						d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-					></path>
-				</svg>
-				<span class="ml-3 text-[var(--color-slate)]">Loading pending approvals...</span>
-			</div>
-		</div>
+		<CardSkeleton count={3} />
 	{/if}
 
 	<!-- Proposals list -->

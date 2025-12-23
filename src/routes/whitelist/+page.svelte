@@ -424,8 +424,8 @@
 			</div>
 		{:else}
 			<!-- Multiple results - table display -->
-			<div class="card overflow-hidden p-0">
-				<table class="w-full">
+			<div class="card overflow-x-auto p-0">
+				<table class="w-full min-w-[400px]">
 					<thead>
 						<tr class="border-b border-[var(--color-border)] bg-[var(--color-cream)]">
 							<th
