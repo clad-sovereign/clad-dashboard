@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { subscribeToConnectionState, type ConnectionState } from '$lib/substrate';
+	import { subscribeToServerState, isMockMode, type ServerConnectionState } from '$lib/api';
 	import { onMount, onDestroy } from 'svelte';
 	import StatusDot from './StatusDot.svelte';
 
@@ -11,24 +12,23 @@
 	let { onMenuToggle, mobileMenuOpen }: Props = $props();
 
 	let connectionState: ConnectionState = $state('disconnected');
-	let unsubscribe: (() => void) | null = null;
+	let serverState: ServerConnectionState = $state('disconnected');
+	let unsubscribeNode: (() => void) | null = null;
+	let unsubscribeServer: (() => void) | null = null;
 
 	onMount(() => {
-		unsubscribe = subscribeToConnectionState((state) => {
+		unsubscribeNode = subscribeToConnectionState((state) => {
 			connectionState = state;
+		});
+		unsubscribeServer = subscribeToServerState((state) => {
+			serverState = state;
 		});
 	});
 
 	onDestroy(() => {
-		if (unsubscribe) unsubscribe();
+		if (unsubscribeNode) unsubscribeNode();
+		if (unsubscribeServer) unsubscribeServer();
 	});
-
-	const statusLabels: Record<ConnectionState, string> = {
-		connected: 'Connected',
-		connecting: 'Connecting...',
-		disconnected: 'Disconnected',
-		error: 'Error'
-	};
 </script>
 
 <header
@@ -118,11 +118,31 @@
 
 		<!-- Connection Status -->
 		<div class="flex items-center gap-4">
-			<div class="flex items-center gap-2">
+			<!-- Node Status -->
+			<div class="hidden items-center gap-2 sm:flex" title="Node connection">
 				<StatusDot status={connectionState} />
-				<span class="text-sm text-[var(--color-slate)]">
-					{statusLabels[connectionState]}
-				</span>
+				<span class="text-sm text-[var(--color-slate)]"> Node </span>
+			</div>
+
+			<!-- Server Status -->
+			<div class="hidden items-center gap-2 sm:flex" title="CLAD Server connection">
+				{#if isMockMode()}
+					<span class="h-2 w-2 rounded-full bg-amber-400"></span>
+					<span class="text-sm text-[var(--color-slate)]">Mock</span>
+				{:else}
+					<StatusDot status={serverState} />
+					<span class="text-sm text-[var(--color-slate)]"> Server </span>
+				{/if}
+			</div>
+
+			<!-- Compact view for mobile -->
+			<div class="flex items-center gap-1 sm:hidden" title="Connection status">
+				<StatusDot status={connectionState} />
+				{#if isMockMode()}
+					<span class="h-2 w-2 rounded-full bg-amber-400"></span>
+				{:else}
+					<StatusDot status={serverState} />
+				{/if}
 			</div>
 		</div>
 	</div>
