@@ -85,8 +85,9 @@ export function initializeMockData(): void {
 	}
 
 	// Sample admin multi-sig config
+	// Note: This is the actual derived multisig address for Alice+Bob+Charlie with threshold=2
 	mockAdminConfig = {
-		multisigAddress: '5DTestMultisigAddress1234567890abcdefghijk',
+		multisigAddress: '5DjYJStmdZ2rcqXbXGX7TW85JsrW6uG4y9MUcLq2BoPMpRA7',
 		signatories: [
 			'5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY',
 			'5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty',
