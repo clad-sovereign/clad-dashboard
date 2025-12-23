@@ -4,6 +4,7 @@
 	import { browser } from '$app/environment';
 	import { Header, Sidebar } from '$lib/components';
 	import { connect, disconnect } from '$lib/substrate';
+	import { initializeClient, checkHealth } from '$lib/api';
 
 	const STORAGE_KEY = 'clad-dashboard-endpoint';
 	const DEFAULT_ENDPOINT = 'ws://127.0.0.1:9944';
@@ -21,6 +22,9 @@
 	}
 
 	onMount(async () => {
+		// Initialize API client (loads stored URL, initializes mock data if needed)
+		initializeClient();
+
 		// Load saved endpoint from localStorage or use default
 		let endpoint = DEFAULT_ENDPOINT;
 		if (browser) {
@@ -36,6 +40,11 @@
 		} catch (error) {
 			console.error('Failed to connect to node:', error);
 		}
+
+		// Check CLAD Server health (non-blocking)
+		checkHealth().catch((error) => {
+			console.error('Failed to check server health:', error);
+		});
 	});
 
 	onDestroy(async () => {
