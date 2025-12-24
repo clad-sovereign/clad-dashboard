@@ -160,6 +160,17 @@ export async function mockGetCallData(callHash: string): Promise<ApiResult<CallD
 }
 
 /**
+ * Mock list call data
+ */
+export async function mockListCallData(): Promise<ApiResult<CallData[]>> {
+	await delay();
+
+	const data = Array.from(mockCallData.values()).sort((a, b) => b.createdAt - a.createdAt);
+
+	return { success: true, data };
+}
+
+/**
  * Mock list accounts
  */
 export async function mockListAccounts(): Promise<ApiResult<AccountMetadata[]>> {
