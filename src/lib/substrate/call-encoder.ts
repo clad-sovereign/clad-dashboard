@@ -32,6 +32,13 @@ export interface EncodedCall {
  * @returns Encoded call data with hash
  */
 export function encodeAddToWhitelist(api: ApiPromise, address: string): EncodedCall {
+	// Verify the pallet exists in the runtime
+	if (!api.tx.cladToken?.addToWhitelist) {
+		throw new Error(
+			'CladToken pallet not found in runtime. Ensure you are connected to the correct chain.'
+		);
+	}
+
 	// Create the call using the API
 	const call = api.tx.cladToken.addToWhitelist(address);
 

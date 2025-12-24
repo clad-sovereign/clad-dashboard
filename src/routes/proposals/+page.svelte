@@ -91,13 +91,13 @@
 	}
 
 	// Get unique call names for filter
-	let callNames = $derived(() => {
+	let callNames = $derived.by(() => {
 		const names = new Set(proposals.map((p) => p.callName));
 		return ['all', ...Array.from(names).sort()];
 	});
 
 	// Filter proposals
-	let filteredProposals = $derived(() => {
+	let filteredProposals = $derived.by(() => {
 		if (filterCallName === 'all') {
 			return proposals;
 		}
@@ -269,7 +269,7 @@
 						bind:value={filterCallName}
 						class="mt-1 rounded-md border border-[var(--color-border)] px-3 py-1.5 text-sm focus:border-[var(--color-navy)] focus:ring-1 focus:ring-[var(--color-navy)] focus:outline-none"
 					>
-						{#each callNames() as name (name)}
+						{#each callNames as name (name)}
 							<option value={name}>
 								{name === 'all' ? 'All Types' : name}
 							</option>
@@ -278,7 +278,7 @@
 				</div>
 				<div class="flex-1"></div>
 				<div class="text-sm text-[var(--color-slate-light)]">
-					{filteredProposals().length} of {proposals.length} proposals
+					{filteredProposals.length} of {proposals.length} proposals
 				</div>
 			</div>
 		</div>
@@ -326,7 +326,7 @@
 			</div>
 		{:else}
 			<div class="space-y-4">
-				{#each filteredProposals() as proposal (proposal.callHash)}
+				{#each filteredProposals as proposal (proposal.callHash)}
 					<div class="card">
 						<div class="flex items-start justify-between gap-4">
 							<div class="flex items-start gap-3">

@@ -21,7 +21,7 @@
 	let showFilter = $state<'all' | 'valid' | 'invalid' | 'duplicate' | 'already_whitelisted'>('all');
 
 	// Get filtered entries
-	let filteredEntries = $derived(() => {
+	let filteredEntries = $derived.by(() => {
 		if (showFilter === 'all') {
 			return result.entries;
 		}
@@ -184,7 +184,7 @@
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-[var(--color-border)]">
-					{#each filteredEntries() as entry (entry.lineNumber)}
+					{#each filteredEntries as entry (entry.lineNumber)}
 						{@const badge = getStatusBadge(entry.status)}
 						<tr class="hover:bg-[var(--color-cream)]/50">
 							<td class="px-4 py-3 text-sm text-[var(--color-slate-light)]">

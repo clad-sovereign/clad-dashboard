@@ -250,7 +250,8 @@
 		error = null;
 
 		try {
-			// Use a placeholder address for createdBy (in production, this would come from the connected wallet)
+			// TODO: In production, createdBy should come from user settings or authenticated session
+			// Currently using Alice's well-known dev address as a placeholder for development
 			const createdBy = '5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY';
 
 			const result = await createBatchWhitelistProposals(
