@@ -13,6 +13,7 @@
 		{ href: '/', label: 'Overview', icon: 'home' },
 		{ href: '/balances', label: 'Balances', icon: 'wallet' },
 		{ href: '/whitelist', label: 'Whitelist', icon: 'users' },
+		{ href: '/proposals', label: 'Proposals', icon: 'clipboard' },
 		{ href: '/events', label: 'Events', icon: 'activity' },
 		{ href: '/multisig', label: 'Multi-sig', icon: 'shield' },
 		{ href: '/settings', label: 'Settings', icon: 'settings' }
@@ -26,6 +27,8 @@
 			'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z',
 		users:
 			'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
+		clipboard:
+			'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
 		activity: 'M22 12h-4l-3 9L9 3l-3 9H2',
 		shield:
 			'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',

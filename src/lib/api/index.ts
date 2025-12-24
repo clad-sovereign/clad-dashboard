@@ -42,7 +42,13 @@ export {
 } from './client';
 
 // CallData endpoints
-export { createCallData, getCallData, isValidCallHash, isValidEncodedCall } from './call-data';
+export {
+	listCallData,
+	createCallData,
+	getCallData,
+	isValidCallHash,
+	isValidEncodedCall
+} from './call-data';
 
 // Account endpoints
 export { listAccounts, getAccount, createAccount, updateAccount } from './accounts';

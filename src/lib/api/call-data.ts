@@ -7,10 +7,22 @@
  */
 
 import { get, isMockMode, post } from './client';
-import { mockCreateCallData, mockGetCallData } from './mock';
+import { mockCreateCallData, mockGetCallData, mockListCallData } from './mock';
 import type { ApiResult, CallData, CreateCallDataRequest } from './types';
 
 const BASE_PATH = '/api/v1/call-data';
+
+/**
+ * List all stored call data
+ *
+ * @returns Array of all call data, sorted by creation time (newest first)
+ */
+export async function listCallData(): Promise<ApiResult<CallData[]>> {
+	if (isMockMode()) {
+		return mockListCallData();
+	}
+	return get<CallData[]>(BASE_PATH);
+}
 
 /**
  * Store call data for a multi-sig operation

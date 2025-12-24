@@ -2,3 +2,4 @@
 export * from './client';
 export * from './types';
 export * from './call-decoder';
+export * from './call-encoder';
